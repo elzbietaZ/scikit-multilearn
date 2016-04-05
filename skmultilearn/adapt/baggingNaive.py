@@ -14,9 +14,9 @@ class BaggingNaive(MLClassifierBase):
         self.label_count = y.shape[1]
 
         instances_sets = []
-        self.instance_count = y.shape[0]
-        self.partition_size = int(numpy.ceil(self.instance_count / self.model_count))
-        free_instances = xrange(self.instance_count)
+        instance_count = y.shape[0]
+        self.partition_size = int(numpy.ceil(instance_count / self.model_count))
+        free_instances = xrange(instance_count)
         while (len(instances_sets) < self.model_count):
             instances_set = random.sample(free_instances, self.partition_size)
             free_instances = list(set(free_instances).difference(set(instances_set)))
@@ -44,13 +44,14 @@ class BaggingNaive(MLClassifierBase):
 
     # TODO refactor to use sparse matrixes everywhere
     def predict(self, X):
+        instance_count = X.shape[0]
         predictions = []
         for i in xrange(self.model_count):
             predictions.append(self.classifiers[i].predict(self.ensure_input_format(X)))
 
         result = sparse.lil_matrix((X.shape[0], self.label_count), dtype=int)
 
-        for instance in xrange(self.instance_count / 2):
+        for instance in xrange(instance_count):
             for label in xrange(self.label_count):
                 votes = []
                 for model in xrange(self.model_count):
@@ -62,7 +63,7 @@ class BaggingNaive(MLClassifierBase):
 
     def vote(self, votes):
         assignLabel = 0
-        suma = sum(votes)
-        if suma > (self.model_count / 2):
+        sumOfVotes = sum(votes)
+        if sumOfVotes > (self.model_count / 2):
             assignLabel = 1
         return assignLabel
